@@ -12,7 +12,7 @@ PAGE_CONFIG = dict(page_title="PaySim | Operations", layout="wide", initial_side
 # AFTER Start — 9A.1: khung điều hành tối, thanh điều hướng dọc.
 def setup():
     st.markdown('''<style>
-    [data-testid="stAppViewContainer"], [data-testid="stHeader"] {background:#0b1726;color:#e0ecf5;}
+    [data-testid="stAppViewContainer"], [data-testid="stHeader"] {background:#2D3A47;color:#A9B7C6;}
     [data-testid="stMain"] h1,[data-testid="stMain"] h2,[data-testid="stMain"] h3,
     [data-testid="stMain"] p,[data-testid="stMetricValue"] {color:#e0ecf5;}
     [data-testid="stMetric"] {padding:12px;border-left:2px solid #2dd4bf;background:#12283c;}

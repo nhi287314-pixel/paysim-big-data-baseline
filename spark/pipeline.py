@@ -190,16 +190,16 @@ def train_or_load_model(spark: SparkSession) -> PipelineModel:
 
     # AFTER Start — 7A: Decision Tree học các điều kiện phân nhánh.
     # Giới hạn độ sâu/mẫu lá để hạn chế quá khớp; cảnh báo sai vẫn có thể tăng.
-    model_path = MODEL_PATH.rstrip("/") + "-decision-tree-v1"
-    classifier = DecisionTreeClassifier(
-        featuresCol="features",
-        labelCol="label",
-        weightCol="class_weight",
-        maxDepth=5,
-        maxBins=32,
-        minInstancesPerNode=20,
-        seed=2026,
-    )
+    # model_path = MODEL_PATH.rstrip("/") + "-decision-tree-v1"
+    # classifier = DecisionTreeClassifier(
+    #     featuresCol="features",
+    #     labelCol="label",
+    #     weightCol="class_weight",
+    #     maxDepth=5,
+    #     maxBins=32,
+    #     minInstancesPerNode=20,
+    #     seed=2026,
+    # )
     # AFTER END — 7A
 
     # AFTER Start — 7B: Random Forest kết hợp nhiều cây để so chất lượng/chi phí.
@@ -213,23 +213,23 @@ def train_or_load_model(spark: SparkSession) -> PipelineModel:
     #     minInstancesPerNode=20,
     #     numTrees=40,
     #     featureSubsetStrategy="auto",
-    #     seed=2026,
+    #     seed=2026
     # )
     # AFTER END — 7B
 
     # AFTER Start — 7C: GBT học nối tiếp các cây để giảm lỗi của tập hợp trước.
-    # model_path = MODEL_PATH.rstrip("/") + "-gbt-v1"
-    # classifier = GBTClassifier(
-    #     featuresCol="features",
-    #     labelCol="label",
-    #     weightCol="class_weight",
-    #     maxDepth=5,
-    #     maxBins=32,
-    #     minInstancesPerNode=20,
-    #     maxIter=20,
-    #     stepSize=0.1,
-    #     seed=2026,
-    # )
+    model_path = MODEL_PATH.rstrip("/") + "-gbt-v1"
+    classifier = GBTClassifier(
+        featuresCol="features",
+        labelCol="label",
+        weightCol="class_weight",
+        maxDepth=5,
+        maxBins=32,
+        minInstancesPerNode=20,
+        maxIter=20,
+        stepSize=0.1,
+        seed=2026,
+    )
     # AFTER END — 7C
 
     if hdfs_path_exists(spark, model_path):
