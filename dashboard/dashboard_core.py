@@ -77,7 +77,7 @@ def pipeline_html() -> str:
     return "".join(parts)
 
 
-def line_chart(frame: pd.DataFrame, columns: list[str], labels: dict, y_title: str, view=None):
+def line_chart(frame: pd.DataFrame, columns: list[str], labels: dict, y_title: str, view=None, height=270):
     available = [column for column in columns if column in frame.columns]
     if not available:
         st.info("Đang chờ micro-batch telemetry đầu tiên.")
@@ -93,10 +93,13 @@ def line_chart(frame: pd.DataFrame, columns: list[str], labels: dict, y_title: s
         .encode(
             x=alt.X("created_at:T", title="Thời gian"),
             y=alt.Y("Value:Q", title=y_title),
-            color=alt.Color("Metric:N", legend=alt.Legend(orient="top")),
+            color=alt.Color(
+                "Metric:N",
+                legend=alt.Legend(orient="top") if len(available) > 1 else None,
+            ),
             tooltip=[alt.Tooltip("created_at:T", title="Time"), "Metric:N", alt.Tooltip("Value:Q", format=",.2f")],
         )
-        .properties(height=270)
+        .properties(height=height)
         .interactive()
     )
     st.altair_chart(chart)
@@ -134,21 +137,51 @@ def render_confusion_matrix(model: dict):
         {"Actual": "Legitimate", "Predicted": "Fraud", "Count": model["FP"]},
         {"Actual": "Legitimate", "Predicted": "Legitimate", "Count": model["TN"]},
     ])
-    chart = (
+    row_totals = matrix.groupby("Actual")["Count"].transform("sum")
+    matrix["Rate"] = matrix["Count"].div(row_totals.where(row_totals.ne(0), 1))
+
+    base = (
         alt.Chart(matrix)
-        .mark_rect(cornerRadius=5)
+        .mark_rect(cornerRadius=8)
         .encode(
-            x=alt.X("Predicted:N", title="Model dự đoán"),
-            y=alt.Y("Actual:N", title="Ground truth"),
-            color=alt.Color("Count:Q", scale=alt.Scale(scheme="blues")),
-            tooltip=["Actual", "Predicted", alt.Tooltip("Count", format=",")],
+            x=alt.X(
+                "Predicted:N",
+                title="Nhãn dự đoán",
+                sort=["Fraud", "Legitimate"],
+                axis=alt.Axis(labelAngle=0),
+            ),
+            y=alt.Y(
+                "Actual:N",
+                title="Nhãn thực tế",
+                sort=["Fraud", "Legitimate"],
+            ),
+            color=alt.Color(
+                "Rate:Q",
+                title="Tỷ lệ theo nhãn thực tế",
+                scale=alt.Scale(domain=[0, 1], range=["#F2F0DE", "#BAD6EB"]),
+                legend=alt.Legend(format=".0%"),
+            ),
+            tooltip=[
+                alt.Tooltip("Actual:N", title="Nhãn thực tế"),
+                alt.Tooltip("Predicted:N", title="Nhãn dự đoán"),
+                alt.Tooltip("Count:Q", title="Số giao dịch", format=","),
+                alt.Tooltip("Rate:Q", title="Tỷ lệ trong nhãn thực tế", format=".1%"),
+            ],
         )
-        .properties(height=260)
+        .properties(height=240)
     )
-    text = chart.mark_text(baseline="middle", fontSize=16).encode(
-        text=alt.Text("Count:Q", format=","), color=alt.value("#111827")
+    count_text = base.mark_text(dy=-9, fontSize=15, fontWeight="bold").encode(
+        text=alt.Text("Count:Q", format=","), color=alt.value("#172033")
     )
-    st.altair_chart(chart + text)
+    rate_text = base.mark_text(dy=13, fontSize=12).encode(
+        text=alt.Text("Rate:Q", format=".1%"), color=alt.value("#172033")
+    )
+    st.caption("Mỗi ô hiển thị số giao dịch và tỷ lệ trong cùng một nhãn thực tế.")
+    confusion_chart = (base + count_text + rate_text).properties(
+        background="transparent"
+    ).configure_view(stroke=None)
+    with st.container(key="confusion-chart-panel"):
+        st.altair_chart(confusion_chart, use_container_width=True)
 
 
 def load_snapshot():
@@ -160,6 +193,7 @@ def load_snapshot():
 
     run_id = run["run_id"]
     evaluation = database.evaluation_totals.find_one({"_id": run_id}) or {}
+    batch_count = database.pipeline_metrics.count_documents({"run_id": run_id})
     latest_metric = database.pipeline_metrics.find_one(
         {"run_id": run_id}, sort=[("batch_id", DESCENDING)]
     ) or {}
@@ -197,6 +231,7 @@ def load_snapshot():
     return SimpleNamespace(
         run=run,
         run_id=run_id,
+        batch_count=batch_count,
         evaluation=evaluation,
         latest_metric=latest_metric,
         metrics=metrics,
@@ -261,20 +296,61 @@ def render_page(snapshot, page):
                     st.subheader("Kafka consumer lag")
                     line_chart(history, ["consumer_lag"], {"consumer_lag": "Events đang chờ"}, "Events")
 
-                chart_left, chart_right = st.columns(2)
-                with chart_left:
-                    st.subheader("Latency thay đổi theo micro-batch")
+                st.subheader("Latency thay đổi theo micro-batch")
+                st.caption("Mỗi chỉ số có thang đo riêng; cả hai dùng cùng trục thời gian.")
+                latency_left, latency_right = st.columns(2)
+                with latency_left:
+                    st.markdown("**End-to-end latency p95**")
                     line_chart(
                         history,
-                        ["ingest_latency_p95_ms", "latency_p95_ms"],
-                        {"ingest_latency_p95_ms": "Ingest p95", "latency_p95_ms": "End-to-end p95"},
+                        ["latency_p95_ms"],
+                        {"latency_p95_ms": "End-to-end p95"},
                         "Milliseconds",
+                        height=210,
                     )
-                with chart_right:
-                    st.subheader("Micro-batch duration")
-                    line_chart(history, ["batch_duration_seconds"], {"batch_duration_seconds": "Batch duration"}, "Seconds")
+                with latency_right:
+                    st.markdown("**Ingest latency p95**")
+                    line_chart(
+                        history,
+                        ["ingest_latency_p95_ms"],
+                        {"ingest_latency_p95_ms": "Ingest p95"},
+                        "Milliseconds",
+                        height=210,
+                    )
 
-            st.subheader("60 micro-batch gần nhất")
+                duration_col, alerts_col = st.columns(2)
+                with duration_col:
+                    st.subheader("Micro-batch duration")
+                    line_chart(
+                        history,
+                        ["batch_duration_seconds"],
+                        {"batch_duration_seconds": "Batch duration"},
+                        "Seconds",
+                        height=240,
+                    )
+                with alerts_col:
+                    st.subheader("Alerts theo micro-batch")
+                    line_chart(
+                        history,
+                        ["alerts"],
+                        {"alerts": "Cảnh báo"},
+                        "Số cảnh báo",
+                        height=240,
+                    )
+
+            table_title_col, count_col = st.columns([3, 1])
+            with table_title_col:
+                st.subheader("60 micro-batch gần nhất")
+            with count_col:
+                st.markdown(
+                    f'<div style="display:flex;align-items:center;gap:10px;'
+                    f'padding:8px 14px;margin:0.45rem 0 0 auto;width:max-content;'
+                    f'background:#D0E3FF;border-radius:999px;color:#302c23;">'
+                    f'<span style="font-size:22px;font-weight:700;">{fmt_int(snapshot.batch_count)}</span>'
+                    f'<span style="font-size:13px;line-height:1.25;">Micro-batch hoàn thành'
+                    f'<br><small>trong run này</small></span></div>',
+                    unsafe_allow_html=True,
+                )
             columns = [column for column in [
                 "batch_id", "created_at", "input_rows", "processed_rows",
                 "consumer_lag", "processing_throughput", "latency_p95_ms",
