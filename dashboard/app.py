@@ -8,7 +8,7 @@ from dashboard_core import render
 # AFTER Start — 9A: Operations / 5 thay đổi giao diện
 # import view_operations as view
 # AFTER END — 9A
-
+ 
 # AFTER Start — 9B: Report / 5 thay đổi giao diện
 import view_report as view
 # AFTER END — 9B
