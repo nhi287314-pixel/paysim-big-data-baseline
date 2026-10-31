@@ -2,9 +2,12 @@
 import altair as alt
 import pandas as pd
 import streamlit as st
+from pathlib import Path
 from dashboard_core import PAGES, fmt_int, fmt_float, fmt_pct, detector_metrics, render_page, render_confusion_matrix
 
-PAGE_CONFIG=dict(page_title="PaySim | Business review",layout="centered",initial_sidebar_state="expanded")
+ASSET_DIR = Path(__file__).resolve().parent / "assets"
+
+PAGE_CONFIG=dict(page_title="PaySim | Business review",page_icon="💰",layout="centered",initial_sidebar_state="expanded")
 
 # BEFORE Start — 9B.1
 # Dashboard rộng với sidebar và tiêu đề vận hành.
@@ -12,7 +15,7 @@ PAGE_CONFIG=dict(page_title="PaySim | Business review",layout="centered",initial
 # AFTER Start — 9B.1: trang báo cáo có khổ đọc, typography serif, mục lục ngang.
 def setup():
     st.markdown('''<style>
-   [data-testid="stAppViewContainer"] {background:#081F5C;}[data-testid="stHeader"] {background:transparent;}
+   [data-testid="stAppViewContainer"] {background:#1F3F74;}[data-testid="stHeader"] {background:transparent;}
     .block-container {max-width:1200px;padding:1.5rem 3rem 3rem;background: #e9f3ff;
     border-radius: 28px;margin-top: 3rem;margin-bottom: 3rem;}
     .block-container [data-testid="stVerticalBlock"] {gap:0.5rem !important;}
@@ -45,6 +48,8 @@ def setup():
     color: #302c23 !important;
 }
 .report-divider {border:0;height:2px;background:#302c23;margin:0.25rem 0 0.5rem;}
+.page-title {text-align:center;}
+.page-subtitle {text-align:center;color:#85837d;font-size:1.1rem;margin-top:0;}
 [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked),
 [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) * {
     font-weight: 700 !important;
@@ -67,6 +72,114 @@ def setup():
     background-color: #D0E3FF !important;
     border-radius: 20px !important;
 }
+.st-key-high-risk-card,
+.st-key-high-risk-card [data-testid="stVerticalBlock"],
+.st-key-high-risk-card [data-testid="stVerticalBlockBorderWrapper"],
+.st-key-high-risk-card [data-testid="stVerticalBlockBorderWrapper"] > div,
+.st-key-high-risk-card [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {
+    background-color: #D0E3FF !important;
+    border-radius: 20px !important;
+}
+.st-key-flagged-amount-card,
+.st-key-flagged-amount-card [data-testid="stVerticalBlock"],
+.st-key-flagged-amount-card [data-testid="stVerticalBlockBorderWrapper"],
+.st-key-flagged-amount-card [data-testid="stVerticalBlockBorderWrapper"] > div,
+.st-key-flagged-amount-card [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {
+    background-color: #FFF9F0 !important;
+    border-radius: 20px !important;
+}
+.st-key-new-data-filters,
+.st-key-new-data-filters [data-testid="stVerticalBlock"] {
+    background-color: #D0E3FF !important;
+    border: 1px solid #B8CCE8;
+    border-radius: 18px !important;
+    padding: 0.5rem;
+}
+.st-key-record-lookup-panel,
+.st-key-record-lookup-panel [data-testid="stVerticalBlock"],
+.st-key-record-lookup-panel [data-testid="stExpander"],
+.st-key-record-lookup-panel [data-testid="stExpander"] details,
+.st-key-record-lookup-panel [data-testid="stExpander"] details > div,
+.st-key-record-lookup-panel [data-testid="stExpander"] details > div > div {
+    background-color: #FFFFFF !important;
+}
+.st-key-record-lookup-panel,
+.st-key-record-lookup-panel [data-testid="stVerticalBlock"] {
+    border-radius: 22px !important;
+    overflow: hidden !important;
+}
+.st-key-record-lookup-panel [data-testid="stExpander"] {
+    border: 1px solid #C7D3E0 !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+}
+[class*="st-key-record-metric-"] [data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: #FFFFFF !important;
+    border: 1px solid #000000 !important;
+    border-radius: 12px !important;
+    padding: 0.45rem 0.65rem !important;
+}
+[class*="st-key-record-metric-"] [data-testid="stVerticalBlockBorderWrapper"] > div,
+[class*="st-key-record-metric-"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {
+    background-color: #FFFFFF !important;
+    border-radius: 12px !important;
+}
+.st-key-recent-transaction-mix,
+.st-key-recent-transaction-mix [data-testid="stVerticalBlock"] {
+    background-color: #FFFFFF !important;
+}
+.st-key-recent-transaction-mix {
+    border: 1px solid #C7D3E0 !important;
+    border-radius: 18px !important;
+    padding: 0.4rem;
+    overflow: hidden;
+}
+.st-key-ingestion-processing-group {
+    background-color: #FFF9F0 !important;
+    border-radius: 20px !important;
+    border: 1px solid #d8cdbd;
+    padding: 0.5rem;
+}
+.st-key-ingestion-processing-group [data-testid="stVerticalBlockBorderWrapper"],
+.st-key-ingestion-processing-group [data-testid="stVerticalBlockBorderWrapper"] > div,
+.st-key-ingestion-processing-group [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {
+    background-color: transparent !important;
+}
+.st-key-storage-quality-group,
+.st-key-analytics-fraud-group,
+.st-key-serving-reliability-group {
+    border-radius: 20px !important;
+    border: 1px solid #b8cce8;
+    padding: 0.5rem;
+}
+.st-key-ingestion-processing-group h3,
+.st-key-storage-quality-group h3,
+.st-key-analytics-fraud-group h3,
+.st-key-serving-reliability-group h3 {
+    margin: 0.15rem 0 0.5rem !important;
+    padding: 0.35rem 0.6rem 0.65rem;
+    border-bottom: 1px solid rgba(48, 44, 35, 0.18);
+}
+.st-key-storage-quality-group,
+.st-key-storage-quality-group [data-testid="stVerticalBlockBorderWrapper"],
+.st-key-storage-quality-group [data-testid="stVerticalBlockBorderWrapper"] > div,
+.st-key-storage-quality-group [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
+.st-key-serving-reliability-group,
+.st-key-serving-reliability-group [data-testid="stVerticalBlockBorderWrapper"],
+.st-key-serving-reliability-group [data-testid="stVerticalBlockBorderWrapper"] > div,
+.st-key-serving-reliability-group [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {
+    background-color: #D0E3FF !important;
+}
+.st-key-analytics-fraud-group,
+.st-key-analytics-fraud-group [data-testid="stVerticalBlockBorderWrapper"],
+.st-key-analytics-fraud-group [data-testid="stVerticalBlockBorderWrapper"] > div,
+.st-key-analytics-fraud-group [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {
+    background-color: #FFF9F0 !important;
+}
+[class*="st-key-track-metric-"],
+[class*="st-key-track-metric-"] [data-testid="stVerticalBlockBorderWrapper"] {
+    border: 1.5px solid #081F5C !important;
+}
 .st-key-quality-chart-panel {
     background-color: #FFFFFF !important;
     border: 1px solid #D8D2C3;
@@ -77,14 +190,18 @@ def setup():
 .st-key-quality-chart-panel [data-testid="stVerticalBlock"] {
     background-color: transparent !important;
 }
-.st-key-confusion-chart-panel {
+.st-key-confusion-chart-panel,
+.st-key-rule-confusion-chart-panel,
+.st-key-model-confusion-chart-panel {
     background-color: #FFFFFF !important;
     border: 1px solid #C7D3E0;
     border-radius: 18px;
     padding: 0.4rem;
     overflow: hidden;
 }
-.st-key-confusion-chart-panel [data-testid="stVerticalBlock"] {
+.st-key-confusion-chart-panel [data-testid="stVerticalBlock"],
+.st-key-rule-confusion-chart-panel [data-testid="stVerticalBlock"],
+.st-key-model-confusion-chart-panel [data-testid="stVerticalBlock"] {
     background-color: transparent !important;
 }
 [data-testid="stVegaLiteChart"] {
@@ -97,12 +214,16 @@ def setup():
     border-radius: 16px !important;
 }
     </style>''',unsafe_allow_html=True)
-    st.sidebar.markdown(
-        '<div class="report-masthead">PAYSIM / BUSINESS INTELLIGENCE</div>',
+    _, logo_samsung, logo_aof, _ = st.columns([2, 1, 1, 2], vertical_alignment="center")
+    with logo_samsung:
+        st.image(str(ASSET_DIR / "logo_samsung.png"), width=150)
+    with logo_aof:
+        st.image(str(ASSET_DIR / "logo_aof.png"), width=100)
+    st.markdown(
+        f'<h1 class="page-title">{"Báo cáo kết quả xử lý và chất lượng phát hiện gian lận"}</h1>',
         unsafe_allow_html=True,
     )
-    st.title("Giao dịch & rủi ro")
-    st.caption("Báo cáo kết quả xử lý và chất lượng phát hiện gian lận")
+    st.markdown(f'<p class="page-subtitle">{"Giao dịch và rủi ro"}</p>', unsafe_allow_html=True)
     st.markdown('<hr class="report-divider">', unsafe_allow_html=True)
 
     return st.sidebar.radio(
@@ -119,6 +240,10 @@ def setup():
 # BEFORE END — 9B.2
 # AFTER Start — 9B.2: hai số liệu chủ đạo, số liệu vận hành đưa xuống cuối báo cáo.
 def headline(s):
+    st.markdown(
+        '<div class="report-masthead">PAYSIM / BUSINESS INTELLIGENCE</div>',
+        unsafe_allow_html=True,
+    )
     st.caption(f"RUN {s.run_id}  /  {s.status.upper()}")
     left,right=st.columns([2,3])
     with left:
@@ -238,20 +363,20 @@ def business(s):
 # AFTER Start — 9B.5: báo cáo nghiệp vụ trước; chỉ số vận hành và phụ lục ở cuối.
 def render(s,page):
     headline(s)
-    st.markdown("### Thông số vận hành")
-    a,b,c,d=st.columns(4)
-    with a:
-        with st.container(border=True):
-            st.metric('Nguồn đã phát',fmt_int(s.emitted))
-    with b:
-        with st.container(border=True):
-            st.metric('Ingest hiện tại',f"{fmt_float(s.run.get('instant_emission_rate'))} ev/s")
-    with c:
-        with st.container(border=True):
-            st.metric('Processing throughput',f"{fmt_float(s.latest_metric.get('processing_throughput'))} ev/s")
-    with d:
-        with st.container(border=True):
-            st.metric('End-to-end latency p95',f"{fmt_float(s.latest_metric.get('latency_p95_ms'),0)} ms")
+    with st.expander("Thông số vận hành"):
+        a,b,c,d=st.columns(4)
+        with a:
+            with st.container(border=True):
+                st.metric('Kafka lag',fmt_int(s.lag),help='Số giao dịch đã được phát nhưng Spark chưa xử lý.')
+        with b:
+            with st.container(border=True):
+                st.metric('Ingest throughput',f"{fmt_float(s.latest_metric.get('ingest_throughput'))} ev/s")
+        with c:
+            with st.container(border=True):
+                st.metric('Processing throughput',f"{fmt_float(s.latest_metric.get('processing_throughput'))} ev/s")
+        with d:
+            with st.container(border=True):
+                st.metric('End-to-end latency p95',f"{fmt_float(s.latest_metric.get('latency_p95_ms'),0)} ms")
     if page==PAGES[0]: business(s)
     else: render_page(s,page)
     with st.expander("Phụ lục: telemetry theo micro-batch"):
