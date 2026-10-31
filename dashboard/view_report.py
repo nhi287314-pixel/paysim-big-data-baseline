@@ -47,6 +47,7 @@ def setup():
 [data-testid="stSelectbox"] label {
     color: #302c23 !important;
 }
+.stSidebar .report-masthead {font-size:10px;letter-spacing:2px;line-height:1.6;overflow-wrap:anywhere;}
 .report-divider {border:0;height:2px;background:#302c23;margin:0.25rem 0 0.5rem;}
 .page-title {text-align:center;}
 .page-subtitle {text-align:center;color:#85837d;font-size:1.1rem;margin-top:0;}
@@ -214,11 +215,15 @@ def setup():
     border-radius: 16px !important;
 }
     </style>''',unsafe_allow_html=True)
+    st.sidebar.markdown(
+        '<div class="report-masthead">PAYSIM / BUSINESS INTELLIGENCE</div>',
+        unsafe_allow_html=True,
+    )
     _, logo_samsung, logo_aof, _ = st.columns([2, 1, 1, 2], vertical_alignment="center")
     with logo_samsung:
-        st.image(str(ASSET_DIR / "logo_samsung.png"), width=150)
+        st.image(str(ASSET_DIR / "logo_samsung.png"), width=135)
     with logo_aof:
-        st.image(str(ASSET_DIR / "logo_aof.png"), width=100)
+        st.image(str(ASSET_DIR / "logo_aof.png"), width=90)
     st.markdown(
         f'<h1 class="page-title">{"Báo cáo kết quả xử lý và chất lượng phát hiện gian lận"}</h1>',
         unsafe_allow_html=True,
@@ -240,10 +245,6 @@ def setup():
 # BEFORE END — 9B.2
 # AFTER Start — 9B.2: hai số liệu chủ đạo, số liệu vận hành đưa xuống cuối báo cáo.
 def headline(s):
-    st.markdown(
-        '<div class="report-masthead">PAYSIM / BUSINESS INTELLIGENCE</div>',
-        unsafe_allow_html=True,
-    )
     st.caption(f"RUN {s.run_id}  /  {s.status.upper()}")
     left,right=st.columns([2,3])
     with left:
